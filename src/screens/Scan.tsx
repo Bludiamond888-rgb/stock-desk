@@ -64,7 +64,7 @@ export default function Scan() {
       {msg && <div className={'banner ' + (msg.startsWith('Saved') ? 'ok' : 'err')} data-testid="scan-msg">{msg}</div>}
       {!p ? (
         <>
-          <button className="scan-btn" onClick={() => setCam(true)} disabled={!db.products.length}>
+          <button className="scan-btn" onClick={() => db.products.length ? setCam(true) : setMsg('No products yet. Go to Home and tap Load demo data, or add products in the Products tab.')}>
             <span className="scan-ring">⌁</span><b>Tap to scan</b><small>QR code or barcode</small>
           </button>
           <Field label="Or search SKU / name" wide>
@@ -73,7 +73,7 @@ export default function Scan() {
           {matches.length > 0 && <div className="card list">{matches.map((x) => (
             <button className="row tap" key={x.id} onClick={() => pick(x)}><div className="grow"><b>{x.sku}</b><small>{x.name}</small></div><span className="qty">{onHand(db.movements, x.id)}</span></button>
           ))}</div>}
-          {!db.products.length && <p className="muted center">Add products first (Products tab).</p>}
+          {!db.products.length && <p className="muted center">No products yet. Tap <b>Load demo data</b> on Home, or add products in the Products tab.</p>}
         </>
       ) : (
         <div className="card pad form">

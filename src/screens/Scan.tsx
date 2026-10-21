@@ -40,16 +40,26 @@ export default function Scan() {
   const [retailer, setRetailer] = useState('')
   const [date, setDate] = useState(today())
   const [msg, setMsg] = useState('')
+  const [unknown, setUnknown] = useState('')
   const retailers = useMemo(() => [...new Set(db.movements.filter((m) => m.retailer).map((m) => m.retailer))].sort(), [db.movements])
   const matches = q.trim() ? db.products.filter((x) => (x.sku + ' ' + x.name).toLowerCase().includes(q.trim().toLowerCase())).slice(0, 8) : []
 
-  const pick = (x: Product) => { setP(x); setPrice(String(x.price)); setQty('1'); setQ(''); setMsg('') }
+  const pick = (x: Product) => { setP(x); setPrice(String(x.price)); setQty('1'); setQ(''); setMsg(''); setUnknown('') }
   const onCode = (code: string) => {
     setCam(false)
     const sku = code.replace(/^SKU:/i, '')
     const x = db.products.find((y) => y.sku.toLowerCase() === sku.toLowerCase())
-    if (x) pick(x); else { setQ(sku); setMsg(`No product with SKU “${sku}”.`) }
+    if (x) pick(x); else { setP(null); setMsg(''); setUnknown(sku) }
   }
+  // after "Add as new product" → save, Products sends us back with ?pick=SKU
+  useEffect(() => {
+    const m = location.hash.match(/[?&]pick=([^&]*)/)
+    if (!m) return
+    const sku = decodeURIComponent(m[1]).toLowerCase()
+    const x = db.products.find((y) => y.sku.toLowerCase() === sku)
+    if (x) { pick(x); history.replaceState(null, '', '#/scan') }
+  }, [db.products])
+  useEffect(() => { (window as unknown as { __scanCode?: (c: string) => void }).__scanCode = onCode })
   const stock = p ? onHand(db.movements, p.id) : 0
   const n = Math.floor(num(qty))
   const save = async () => {
@@ -62,6 +72,13 @@ export default function Scan() {
   return (
     <div className="screen">
       {msg && <div className={'banner ' + (msg.startsWith('Saved') ? 'ok' : 'err')} data-testid="scan-msg">{msg}</div>}
+      {unknown && !p && (
+        <div className="card pad unknown" data-testid="unknown-code">
+          <div className="muted">New code:</div><div className="label-sku">{unknown}</div>
+          <button className="btn primary big block" onClick={() => { location.hash = '#/products?new=' + encodeURIComponent(unknown) + '&from=scan' }}>＋ Add as new product</button>
+          <button className="btn ghost block" onClick={() => setUnknown('')}>Dismiss</button>
+        </div>
+      )}
       {!p ? (
         <>
           <button className="scan-btn" onClick={() => db.products.length ? setCam(true) : setMsg('No products yet. Go to Home and tap Load demo data, or add products in the Products tab.')}>

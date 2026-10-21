@@ -129,6 +129,13 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0;
 .tab.scan .ico { width: 44px; height: 30px; border-radius: 12px; background: var(--grad); color: #fff; display: grid; place-items: center; -webkit-background-clip: border-box; background-clip: border-box; }
 
 @media print {
-  body { background: #fff; } body * { visibility: hidden; } #print-label, #print-label * { visibility: visible; }
-  #print-label { position: fixed; left: 0; top: 0; width: 100%; margin: 0; border: 0; } .sheet-bg { background: none; backdrop-filter: none; }
+  body { background: #fff; } body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; border: 0; } .sheet { max-height: none; overflow: visible; }
+  .label-grid { grid-template-columns: repeat(3, 1fr); } .label-grid .label { break-inside: avoid; border: 1px dashed #999; } .sheet-bg { background: none; backdrop-filter: none; }
 }
+
+.sku-row { display: flex; gap: 8px; } .sku-row input { flex: 1; min-width: 0; }
+.head-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.label-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+.label-grid .label { margin: 0; padding: 10px; } .label-grid .label-sku { font-size: 18px; } .label-grid .label-name { font-size: 12px; }
+.unknown { text-align: center; margin-bottom: 14px; } .unknown .label-sku { color: var(--text, #fff); margin: 4px 0 12px; }

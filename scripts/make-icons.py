@@ -1,13 +1,13 @@
-"""Generate PWA/iOS icons: stacked boxes on dark tile with violet->cyan gradient."""
+"""Generate PWA/iOS icons: stacked boxes on white tile with violet->cyan gradient."""
 from PIL import Image, ImageDraw
 import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'icons')
-BG = (11, 11, 20, 255)
+BG = (255, 255, 255, 255)
 def grad(S):
     g = Image.new('RGBA', (S, S)); px = g.load()
     for y in range(S):
         for x in range(S):
-            t = (x + y) / (2 * S); px[x, y] = (int(124 + (34 - 124) * t), int(92 + (211 - 92) * t), int(255 + (238 - 255) * t), 255)
+            t = (x + y) / (2 * S); px[x, y] = (int(124 + (6 - 124) * t), int(58 + (182 - 58) * t), int(237 + (212 - 237) * t), 255)
     return g
 def icon(size, mode):
     S = 256; im = Image.new('RGBA', (S, S), BG if mode != 'any' else (0, 0, 0, 0)); d = ImageDraw.Draw(im)

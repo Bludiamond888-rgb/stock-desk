@@ -5,6 +5,31 @@ import { money, productRows } from '../lib/calc'
 import type { Product } from '../lib/types'
 import { generateSku } from '../lib/sku'
 import { Empty, Field, num, Sheet } from '../ui'
+import { labelPng, labelsPdf, preferShare, shareOrOpen, type LabelData } from '../lib/labels'
+
+/** Pre-generates the PNG/PDF so the tap can call navigator.share synchronously (iOS needs user activation). */
+function PrintShareButton({ labels, text, className }: { labels: LabelData[]; text: string; className: string }) {
+  const key = JSON.stringify(labels)
+  const [file, setFile] = useState<File | null>(null)
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    let ok = true; setFile(null); setErr('')
+    const t = setTimeout(() => {
+      const make = labels.length === 1 ? labelPng(labels[0]) : labelsPdf(labels)
+      make.then((f) => { if (ok) { setFile(f); (window as unknown as { __lastLabelFile?: File }).__lastLabelFile = f } }).catch((e) => ok && setErr(String(e)))
+    }, 250)
+    return () => { ok = false; clearTimeout(t) }
+  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  const share = preferShare()
+  const click = () => {
+    if (!share) { window.print(); return } // desktop: synchronous print in the click handler
+    if (file) shareOrOpen(file).catch((e) => setErr(String(e)))
+  }
+  return <>
+    <button className={className} data-testid="print-share" data-ready={file ? '1' : '0'} disabled={share && !file} onClick={click}>{share && !file ? 'Preparing…' : text}</button>
+    {err ? <p className="share-note neg">{err}</p> : share && file && <p className="share-note">Opens the share sheet — choose Print, Save to Files or AirDrop.</p>}
+  </>
+}
 
 export function useQR(text: string) {
   const [src, setSrc] = useState('')
@@ -20,7 +45,7 @@ function LabelCard({ sku, name }: { sku: string; name: string }) {
 function AllLabels({ products, onClose }: { products: Product[]; onClose: () => void }) {
   return (
     <Sheet title={`All labels (${products.length})`} onClose={onClose}>
-      <button className="btn primary big block" onClick={() => print()}>Print all labels</button>
+      <PrintShareButton className="btn primary big block" text="Print / Share all labels" labels={products.map((p) => ({ sku: p.sku, name: p.name }))} />
       <div className="label-grid print-area" data-testid="label-sheet">{products.map((p) => <LabelCard key={p.id} sku={p.sku} name={p.name} />)}</div>
     </Sheet>
   )
@@ -30,7 +55,7 @@ function Label({ p, onClose }: { p: Product; onClose: () => void }) {
   return (
     <Sheet title="QR label" onClose={onClose}>
       <div className="print-area"><LabelCard sku={p.sku} name={p.name} /></div>
-      <button className="btn primary big block" onClick={() => print()}>Print label</button>
+      <PrintShareButton className="btn primary big block" text="Print / Share label" labels={[{ sku: p.sku, name: p.name }]} />
     </Sheet>
   )
 }
@@ -55,7 +80,7 @@ function Edit({ p, onClose }: { p: Partial<Product>; onClose: (saved?: Product) 
         <Field label="Reorder at (units)" wide><input inputMode="numeric" value={f.reorder} onChange={set('reorder')} /></Field>
       </div>
       {sku && <><div className="print-area" data-testid="form-label"><LabelCard sku={sku} name={f.name.trim()} /></div>
-        <button className="btn block" onClick={() => print()}>Print label</button></>}
+        <PrintShareButton className="btn block" text="Print / Share label" labels={[{ sku, name: f.name.trim() }]} /></>}
       <button className="btn primary big block" disabled={!ok} onClick={save}>Save product</button>
       {p.id && <button className="btn danger block" onClick={async () => { if (confirm('Delete this product and its stock history?')) { await s.deleteProduct(p.id!); onClose() } }}>Delete product</button>}
     </Sheet>
@@ -80,7 +105,7 @@ export default function Products() {
   const rows = productRows(db).filter(({ p }) => (p.sku + ' ' + p.name).toLowerCase().includes(q.toLowerCase()))
   return (
     <div className="screen">
-      <div className="head-row"><h1>Products</h1><div className="head-btns">{db.products.length > 0 && <button className="btn" onClick={() => setAll(true)}>Print all labels</button>}<button className="btn primary" onClick={() => setEdit({})}>＋ Add</button></div></div>
+      <div className="head-row"><h1>Products</h1><div className="head-btns">{db.products.length > 0 && <button className="btn" onClick={() => setAll(true)}>Print / Share all labels</button>}<button className="btn primary" onClick={() => setEdit({})}>＋ Add</button></div></div>
       {!db.products.length ? <Empty icon="🏷️" title="No products yet"><p>Add each item you import with its SKU, cost and sell price.</p><button className="btn primary big" onClick={() => setEdit({})}>Add product</button></Empty> : (
         <>
           <input type="search" className="search" placeholder="Search products" value={q} onChange={(e) => setQ(e.target.value)} />

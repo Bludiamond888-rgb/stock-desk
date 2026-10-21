@@ -1,11 +1,13 @@
 import { useEffect, type ReactNode } from 'react'
+import { useT } from './i18n'
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const { t } = useT()
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose(); addEventListener('keydown', k); return () => removeEventListener('keydown', k) }, [onClose])
   return (
     <div className="sheet-bg" onClick={onClose}>
       <div className="sheet" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-head"><h2>{title}</h2><button className="icon-btn" aria-label="Close" onClick={onClose}>✕</button></div>
+        <div className="sheet-head"><h2>{title}</h2><button className="icon-btn" aria-label={t('common.close')} onClick={onClose}>✕</button></div>
         {children}
       </div>
     </div>

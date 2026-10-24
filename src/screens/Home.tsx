@@ -5,7 +5,7 @@ import { dashboard, money0, pct } from '../lib/calc'
 import { Empty } from '../ui'
 import { useT } from '../i18n'
 
-export default function Home({ onSettings }: { onSettings: () => void }) {
+export default function Home({ onSettings, onCalc }: { onSettings: () => void; onCalc: () => void }) {
   const db = useDB(); const d = dashboard(db); const { t } = useT(); const s = useStore()
   const [busy, setBusy] = useState(false)
   const hour = new Date().getHours()
@@ -17,6 +17,7 @@ export default function Home({ onSettings }: { onSettings: () => void }) {
           <p>{t('home.emptyBody')}</p>
           <a className="btn primary big" href="#/products">{t('home.addFirst')}</a>
           <button className="btn ghost big" disabled={busy} onClick={async () => { setBusy(true); try { await loadDemo(s) } finally { setBusy(false) } }}>{t('settings.loadDemo')}</button>
+          <button className="btn ghost big" data-testid="home-calc-btn" onClick={onCalc}>{t('home.calcCta')}</button>
         </Empty>
       ) : (
         <>
@@ -32,6 +33,7 @@ export default function Home({ onSettings }: { onSettings: () => void }) {
             <div className="card kpi"><span>{t('home.unitsSold')}</span><strong>{d.soldUnits.toLocaleString()}</strong></div>
           </div>
           <a className="btn primary big block" href="#/scan">{t('home.scanCta')}</a>
+          <button className="btn ghost big block" data-testid="home-calc-btn" onClick={onCalc}>{t('home.calcCta')}</button>
           <h3 className="sec">{t('home.low')} {d.low.length > 0 && <span className="pill warn">{d.low.length}</span>}</h3>
           {d.low.length ? (
             <div className="card list">
